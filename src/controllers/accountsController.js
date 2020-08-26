@@ -52,7 +52,7 @@ export class AccountsController {
         res
           .status(200)
           .send(
-            `Deposito realizado com sucesso, novo saldo ${findedAccount.balance}`
+            `Saque realizado com sucesso, novo saldo ${findedAccount.balance}`
           );
       })
       .catch((err) => console.log(err));
@@ -150,27 +150,17 @@ export class AccountsController {
   }
 
   async average(req, res) {
-    let arr = [];
-    let balanceAverage = 0;
-
-    const findedValues = await Account.find(
-      { agencia: req.body.agencia },
-      (err, accounts) => {
-        accounts.forEach((account) => {
-          arr.push(account.balance);
-          balanceAverage = (arr.reduce((x, y) => x + y) / arr.length).toFixed(
-            2
-          );
-        });
+    const balanceAverage = await Account.aggregate([
+      { $match: { agencia: req.body.agencia } },
+      {
+        $group: { _id: { agency: "$agencia" }, balance: { $avg: "$balance" } },
+      },
+    ]).exec((err, response) => {
+      if (err) {
+        res.status(500).send(err);
       }
-    )
-      .then((findedValue) => {
-        if (!findedValue) {
-          res.status(404).send("Contas incorretas");
-        }
-        res.status(200).send(`Média de saldos : ${balanceAverage}`);
-      })
-      .catch((err) => console.log(err));
+      res.status(200).send(response);
+    });
   }
 
   lowestValues = async (req, res) => {
@@ -198,11 +188,11 @@ export class AccountsController {
       {
         $group: {
           _id: "$agencia",
-          id: { $first: "$_id" },
           balance: { $max: "$balance" },
         },
       },
     ]).then(async (aggregateValues) => {
+      console.log(aggregateValues);
       await Account.updateMany(
         { _id: { $in: aggregateValues.map((o) => o.id) } },
         { $set: { agencia: 99 } },
