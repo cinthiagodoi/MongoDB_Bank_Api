@@ -28,7 +28,8 @@ $ npm start
 ## Built With
 
 * [Node](https://nodejs.org/en/) 
-* [MongoDB](https://www.mongodb.com/) 
+* [MongoDB](https://www.mongodb.com/)
+* [Mongoose](https://mongoosejs.com/) 
 * [Express](https://expressjs.com/) 
 
 ## Authors
